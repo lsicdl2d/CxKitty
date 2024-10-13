@@ -16,7 +16,7 @@ from yarl import URL
 
 from logger import Logger
 
-from .exception import HandleCaptchaError
+from .exception import HandleCaptchaError, APIError
 from .schema import AccountInfo
 from .utils import get_ua
 from .face_detection import FaceDetectionDto
@@ -279,8 +279,12 @@ class SessionWraper(Session):
 
         # 上传并提交人脸
         self.face_detection.get_upload_token()
-        object_id, face_image_path = self.face_detection.upload_face_by_puid()
-        self.face_detection.submit_face_new(class_id, course_id, knowledge_id, cpi, object_id)
+        try:
+            object_id, face_image_path = self.face_detection.upload_face_by_puid()
+            self.face_detection.submit_face_new(class_id, course_id, knowledge_id, cpi, object_id)
+        except APIError:
+            object_id, face_image_path = self.face_detection.upload_face_by_puid()
+            self.face_detection.submit_face_new(class_id, course_id, knowledge_id, cpi, object_id)
 
         self.__cb_resolve_face_before(object_id, face_image_path)
         time.sleep(5.0)
